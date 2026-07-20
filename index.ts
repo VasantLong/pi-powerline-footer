@@ -2888,7 +2888,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
           // Cost
           if (seg && seg.usageStats && seg.usageStats.cost > 0) {
             const sub = seg.usingSubscription ? " (sub)" : "";
-            parts.push(icons.cost + " " + safeFg("text", "$" + seg.usageStats.cost.toFixed(2) + sub));
+            parts.push(icons.cost + " " + safeFg("text", "¥" + seg.usageStats.cost.toFixed(2) + sub));
           }
 
           // ↑input / ↓output / R cache / W cache / CH%
