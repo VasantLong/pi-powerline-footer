@@ -39,7 +39,7 @@ The screenshot is illustrative and may differ from current Pi versions. The supp
 ## Installation
 
 ```bash
-pi install npm:pi-powerline-footer
+pi install git:git@github.com-personal:VasantLong/pi-powerline-footer.git
 ```
 
 Restart pi to activate.
