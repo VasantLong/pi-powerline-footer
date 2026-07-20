@@ -39,8 +39,10 @@ The screenshot is illustrative and may differ from current Pi versions. The supp
 ## Installation
 
 ```bash
-pi install git:git@github.com-personal:VasantLong/pi-powerline-footer.git
+pi install git:git@github.com:VasantLong/pi-powerline-footer.git
 ```
+
+> **注意**: 如果你的 SSH 配置使用自定义 Host（如 `github.com-personal`），将命令中的 `github.com` 替换为你的 Host。
 
 Restart pi to activate.
 
