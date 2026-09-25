@@ -5,6 +5,9 @@ import type { ColorValue, CustomItemPosition, CustomStatusItem, PowerlinePlaceme
 
 export type CompactPromptMode = "queue" | "native";
 
+/** A value accepted by `settings.powerline`: either a preset name or a config object. */
+export type PowerlineSettingValue = StatusLinePreset | Record<string, unknown>;
+
 export interface PowerlineConfig {
   preset: StatusLinePreset;
   customItems: CustomStatusItem[];
@@ -18,6 +21,7 @@ export interface PowerlineConfig {
   invalidPlacement: string | null;
   welcome: boolean;
   stashSharpSShortcut: boolean;
+  embeddedBorder: boolean;
   queue: { compactPromptMode: CompactPromptMode };
   workingVibes: { color?: ColorValue | "rainbow" };
 }
@@ -317,6 +321,7 @@ export function parsePowerlineConfig(value: unknown, presets: readonly StatusLin
     invalidPlacement: null,
     welcome: true,
     stashSharpSShortcut: false,
+    embeddedBorder: false,
     queue: { compactPromptMode: "queue" },
     workingVibes: {},
   };
@@ -344,6 +349,7 @@ export function parsePowerlineConfig(value: unknown, presets: readonly StatusLin
     invalidPlacement,
     welcome: value.welcome !== false,
     stashSharpSShortcut: value.stashSharpSShortcut === true,
+    embeddedBorder: value.embeddedBorder === true,
     queue: normalizeQueueOptions(value.queue),
     workingVibes: isRecord(value.workingVibes) && typeof value.workingVibes.color === "string" && value.workingVibes.color.trim()
       ? { color: value.workingVibes.color.trim() as ColorValue | "rainbow" }
@@ -399,7 +405,7 @@ export function mergeSegmentsWithCustomItems(
   };
 }
 
-export function nextPowerlineSettingWithPreset(existingPowerlineSetting: unknown, preset: StatusLinePreset): unknown {
+export function nextPowerlineSettingWithPreset(existingPowerlineSetting: unknown, preset: StatusLinePreset): PowerlineSettingValue {
   if (!isRecord(existingPowerlineSetting)) {
     return preset;
   }
@@ -410,7 +416,7 @@ export function nextPowerlineSettingWithOptions(
   existingPowerlineSetting: unknown,
   updates: Partial<Pick<PowerlineConfig, "welcome" | "stashSharpSShortcut" | "placement">>,
   currentPreset: StatusLinePreset,
-): unknown {
+): PowerlineSettingValue {
   if (!isRecord(existingPowerlineSetting)) {
     return { preset: currentPreset, ...updates };
   }
