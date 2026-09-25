@@ -35,6 +35,7 @@ import { ansi, getFgAnsiCode } from "./colors.ts";
 import { WelcomeComponent, WelcomeHeader, discoverLoadedCounts, getRecentSessions } from "./welcome.ts";
 import { createRenderScheduler } from "./render-scheduler.ts";
 import { getEditorAutocompleteProvider, passAutocompleteProviderThroughPreviousEditor } from "./editor-composition.ts";
+import { embedCurvedEditorChrome } from "./editor-border.ts";
 import { EditorPerfProfiler, readEditorPerfOptions } from "./editor-performance.ts";
 import { CoreContextUsageCache, estimateInitialContextTokens, estimateUnknownContextUsage, resolveDisplayContextUsage, type CoreContextUsage } from "./context-usage.ts";
 import { isStaleExtensionContextError, shouldShowStartupWelcome } from "./lifecycle.ts";
@@ -93,6 +94,7 @@ let config: PowerlineConfig = {
   invalidWorkingIndicatorPlacement: null,
   welcome: true,
   stashSharpSShortcut: false,
+  embeddedBorder: false,
   queue: { compactPromptMode: "queue" },
   sendDelayMs: 0,
   autoFollowUp: false,
@@ -3194,6 +3196,9 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         resetLayoutCache();
       },
       render(width: number): string[] {
+        // With the embedded border the primary row lives in the editor's top border.
+        // Stay registered so invalidate() still resets the layout cache, but draw no rows.
+        if (config.embeddedBorder) return [];
         return measureWidget("primary", () => renderPowerlinePrimaryLines(width, theme));
       },
     }), { placement: config.placement === "below" ? "belowEditor" : "aboveEditor" });
@@ -3479,7 +3484,9 @@ export default function powerlineFooter(pi: ExtensionAPI) {
               : originalRender(width);
           }
 
-          if (editorPerf.options.fastRender) {
+          // The fast path paints its own square borders, so let the normal path
+          // below own the embedded-border chrome.
+          if (editorPerf.options.fastRender && !config.embeddedBorder) {
             const fastLines = editorPerf.options.enabled
               ? editorPerf.measure("editor.render.fast-probe", () => renderFastPowerlineEditor(editor, width, {
                   bashModeActive,
@@ -3512,6 +3519,25 @@ export default function powerlineFooter(pi: ExtensionAPI) {
             : originalRender(contentWidth);
 
           if (lines.length === 0) return lines;
+
+          if (config.embeddedBorder) {
+            const theme = currentCtx?.ui?.theme as Theme | undefined;
+            if (currentCtx && theme) {
+              try {
+                return embedCurvedEditorChrome({
+                  editorLines: lines,
+                  topContent: getResponsiveLayout(width, theme).topContent,
+                  width,
+                  contentWidth,
+                  promptPrefix,
+                  continuationPrefix: contPrefix,
+                  border: (text) => colorEditorBorder(editor, text),
+                });
+              } catch (error) {
+                console.debug("[powerline-footer] Curved editor border failed, falling back:", error);
+              }
+            }
+          }
 
           let bottomBorderIndex = lines.length - 1;
           for (let i = lines.length - 1; i >= 1; i--) {

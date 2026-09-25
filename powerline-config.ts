@@ -7,6 +7,9 @@ export type CompactPromptMode = "queue" | "native";
 export type SecondaryOverflow = "drop" | "wrap";
 export type WorkingIndicatorPlacement = "editor-border" | "above-powerline";
 
+/** A value accepted by `settings.powerline`: either a preset name or a config object. */
+export type PowerlineSettingValue = StatusLinePreset | Record<string, unknown>;
+
 export interface PowerlineConfig {
   preset: StatusLinePreset;
   customItems: CustomStatusItem[];
@@ -25,6 +28,7 @@ export interface PowerlineConfig {
   invalidWorkingIndicatorPlacement: string | null;
   welcome: boolean;
   stashSharpSShortcut: boolean;
+  embeddedBorder: boolean;
   queue: { compactPromptMode: CompactPromptMode };
   sendDelayMs: number;
   autoFollowUp: boolean;
@@ -365,6 +369,7 @@ export function parsePowerlineConfig(value: unknown, presets: readonly StatusLin
     invalidWorkingIndicatorPlacement: null,
     welcome: true,
     stashSharpSShortcut: false,
+    embeddedBorder: false,
     queue: { compactPromptMode: "queue" },
     sendDelayMs: 0,
     autoFollowUp: false,
@@ -404,6 +409,7 @@ export function parsePowerlineConfig(value: unknown, presets: readonly StatusLin
     invalidWorkingIndicatorPlacement,
     welcome: value.welcome !== false,
     stashSharpSShortcut: value.stashSharpSShortcut === true,
+    embeddedBorder: value.embeddedBorder === true,
     queue: normalizeQueueOptions(value.queue),
     sendDelayMs: typeof value.sendDelayMs === "number" && Number.isFinite(value.sendDelayMs) && value.sendDelayMs > 0
       ? value.sendDelayMs
@@ -464,7 +470,7 @@ export function mergeSegmentsWithCustomItems(
   };
 }
 
-export function nextPowerlineSettingWithPreset(existingPowerlineSetting: unknown, preset: StatusLinePreset): unknown {
+export function nextPowerlineSettingWithPreset(existingPowerlineSetting: unknown, preset: StatusLinePreset): PowerlineSettingValue {
   if (!isRecord(existingPowerlineSetting)) {
     return preset;
   }
@@ -475,7 +481,7 @@ export function nextPowerlineSettingWithOptions(
   existingPowerlineSetting: unknown,
   updates: Partial<Pick<PowerlineConfig, "welcome" | "stashSharpSShortcut" | "placement">>,
   currentPreset: StatusLinePreset,
-): unknown {
+): PowerlineSettingValue {
   if (!isRecord(existingPowerlineSetting)) {
     return { preset: currentPreset, ...updates };
   }
